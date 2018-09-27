@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package agent;
+
+option java_package = "agent";
+option java_outer_classname = "MethodProtos";
+
+message MethodCall {
+
+	string signature = 1;
+
+	enum MethodCallType {
+		NORMAL = 0;
+		THREAD_START = 1;
+	}
+
+	MethodCallType type = 2;
+	
+	message CallerInfo {
+		string filename = 1;
+		int32 linenum = 2;
+	}
+
+	CallerInfo caller = 3;
+
+	repeated MethodCall calls = 4;
+
+	enum InstructionType {
+		READ = 0;
+		WRITE = 1;
+	}
+
+	message Instruction {
+		InstructionType type = 1;
+
+		message Variable {
+			int32 index = 1;
+			string name = 2;
+			string type = 3;
+		}
+
+		Variable variable = 2;
+		string value_after = 3;
+		string value_before = 4;
+	}
+
+	repeated Instruction instructions = 5;
+
+	int64 duration = 6;
+
+	int64 new_thread_id = 7;
+	int32 depth = 8;
+
+}
