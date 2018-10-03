@@ -3,6 +3,8 @@ package agent;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.LocalVariableNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -69,14 +71,15 @@ public class Agent {
               && !className.startsWith("agent/")
               && className.startsWith(pack + "/")) {
 
-            // inject code to record
+            // inject code to record method-calls & variable accessing
             ClassReader cr = new ClassReader(bytes);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
             ClassAdapter ra = new ClassAdapter(cw, className);
             cr.accept(ra, ClassReader.EXPAND_FRAMES);
             modifiedClass = cw.toByteArray();
 
-            // use asm.tree to get local variable metadata
+            // use asm.tree to get local variable metadata (name, index, type)
+            //  note: (should be done AFTER we add locals...)
             ClassReader cr2 = new ClassReader(modifiedClass);
             ClassWriter cw2 = new ClassWriter(0);
             ClassNodeAdapter ra2 = new ClassNodeAdapter(cw2, className);
@@ -158,12 +161,16 @@ public class Agent {
 
     @Override
     public void visitVarInsn(int opcode, int var) {
+
       if (readInsnList.contains(opcode)) {
 
         // TODO: record read value
         super.visitVarInsn(opcode, var);
 
       } else if (writeInsnList.contains(opcode)) {
+
+        // TODO use opcode to get type
+        // AgentUtils.getLoadInst(opcode);
 
         // TODO: record before value
         super.visitVarInsn(opcode, var);
@@ -194,8 +201,19 @@ public class Agent {
       loggerId = this.newLocal(Type.getObjectType("agent/ProfileLogger"));
       startTimeId = this.newLocal(Type.LONG_TYPE);
 
+      // logger = getInstance()
       mv.visitMethodInsn(INVOKESTATIC, "agent/ProfileLogger", "getInstance", "()Lagent/ProfileLogger;", false);
       mv.visitVarInsn(ASTORE, loggerId);
+
+      // TODO logParams on entry
+      List<String> args = AgentUtils.getMethodParamCount(sig);
+      for (String arg : args) {
+        // mv.visitVarInsn(ALOAD, loggerId);
+        //  ...
+        // AgentUtils.getLoadInst(arg);
+      }
+
+      // logMethodStart( ... )
       mv.visitVarInsn(ALOAD, loggerId);
       mv.visitLdcInsn(sig);
       mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logMethodStart", "(Ljava/lang/String;)V", false);

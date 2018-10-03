@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ProfileLogger {
 
@@ -102,6 +104,9 @@ public class ProfileLogger {
 	}
 
 	private void logMethodCallStart(MethodCallNode methodCall) {
+
+	  AgentUtils.getMethodParamCount(methodCall.getSignature());
+
     if (methodCall.getDepth() == 0) {
 
       lastNode = methodCall;
@@ -161,8 +166,97 @@ public class ProfileLogger {
     }
   }
 
+	/**
+	 * Logs the end of a method call and its duration.
+	 */
+	public void logMethodDuration(String methodSig, long duration) {
+    int depth = getDepth();
+    MethodCallNode last;
+
+    try {
+      last = getLastNode(depth);
+    } catch (ArrayIndexOutOfBoundsException ex) {
+      assert !initCache.isEmpty();
+      initCache.get(0).setDuration(duration);
+      return;
+    }
+
+    assert last != null;
+    assert last.getSignature().equals(methodSig);
+
+    last.setDuration(duration);
+
+    if (depth == 0) {
+
+      // TODO: build & write to file
+      String s = last.toProto().toString();
+      System.out.println(s);
+      out.println(s);
+
+    }
+	}
+
+	public void logVariableDeclaration(String name, String descriptor, String signature, int index, int line) {
+	  // TODO *this*
+  }
+
+	public void logVariableUse(int var, int opcode, int line) {
+    int depth = getDepth();
+    MethodCallNode last;
+
+    try {
+      last = getLastNode(depth);
+    } catch (ArrayIndexOutOfBoundsException ex) {
+      assert !initCache.isEmpty();
+
+      // TODO handle initCache
+
+      return;
+    }
+
+    List<MethodProtos.MethodCall.Instruction> instr = last.getInstructions();
+    instr.add(
+        MethodProtos.MethodCall.Instruction.newBuilder()
+//        .setType(
+//            (isRead)
+//            ? MethodProtos.MethodCall.InstructionType.READ
+//            : MethodProtos.MethodCall.InstructionType.WRITE
+//        )
+        .build()
+    );
+
+
+
+  }
+
+	/**
+	 * Get the caller File/linenum of a stack trace
+   *  based on method call's depth.
+	 */
+	private static StackTraceElement getCaller(int depth) {
+    StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+		return trace[trace.length - depth];
+	}
+
+	/**
+	 * Get the actual depth of the method call based on
+   *  the stack-trace.
+	 *
+	 * @return depth  depth of method (main.depth == 0, main->test.depth == 1, ...)
+	 */
+  private static int getDepth() {
+    StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+    int first = -1;
+    for (int i = 1; i < trace.length && first == -1; i++) {
+      if (!trace[i].getClassName().equals("agent.ProfileLogger")) {
+        first = i;
+      }
+    }
+    return (trace.length - 1) - first;
+  }
+
   private MethodCallNode getLastNodeParent(int depth) {
-	  return getLastNode(depth - 1);
+    return getLastNode(depth - 1);
   }
 
   private MethodCallNode getLastNode(int depth) {
@@ -196,61 +290,5 @@ public class ProfileLogger {
       lastNode = parent;
       return parent;
     }
-  }
-
-	/**
-	 * Logs the end of a method call and its duration.
-	 */
-	public void logMethodDuration(String methodSig, long duration) {
-    int depth = getDepth();
-    MethodCallNode last;
-
-    try {
-      last = getLastNode(depth);
-    } catch (ArrayIndexOutOfBoundsException ex) {
-      assert !initCache.isEmpty();
-      initCache.get(0).setDuration(duration);
-      return;
-    }
-
-    assert last != null;
-    assert last.getSignature().equals(methodSig);
-
-    last.setDuration(duration);
-
-    if (depth == 0) {
-
-      // TODO: build & write to file
-      String s = last.toProto().toString();
-      System.out.println(s);
-      out.println(s);
-
-    }
-	}
-
-	/**
-	 * Get the caller File/linenum of a stack trace
-   *  based on method call's depth.
-	 */
-	public static StackTraceElement getCaller(int depth) {
-    StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-		return trace[trace.length - depth];
-	}
-
-	/**
-	 * Get the actual depth of the method call based on
-   *  the stack-trace.
-	 *
-	 * @return depth  depth of method (main.depth == 0, main->test.depth == 1, ...)
-	 */
-  private static int getDepth() {
-    StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-    int first = -1;
-    for (int i = 1; i < trace.length && first == -1; i++) {
-      if (!trace[i].getClassName().equals("agent.ProfileLogger")) {
-        first = i;
-      }
-    }
-    return (trace.length - 1) - first;
   }
 }
