@@ -112,6 +112,25 @@ public final class MethodProtos {
      * <code>int32 depth = 8;</code>
      */
     int getDepth();
+
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    java.util.List<java.lang.String>
+        getParamValuesList();
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    int getParamValuesCount();
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    java.lang.String getParamValues(int index);
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    com.google.protobuf.ByteString
+        getParamValuesBytes(int index);
   }
   /**
    * Protobuf type {@code agent.MethodCall}
@@ -133,6 +152,7 @@ public final class MethodProtos {
       duration_ = 0L;
       newThreadId_ = 0L;
       depth_ = 0;
+      paramValues_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -224,6 +244,15 @@ public final class MethodProtos {
               depth_ = input.readInt32();
               break;
             }
+            case 74: {
+              java.lang.String s = input.readStringRequireUtf8();
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+                paramValues_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000100;
+              }
+              paramValues_.add(s);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -237,6 +266,9 @@ public final class MethodProtos {
         }
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           instructions_ = java.util.Collections.unmodifiableList(instructions_);
+        }
+        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+          paramValues_ = paramValues_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -365,6 +397,10 @@ public final class MethodProtos {
        * <code>WRITE = 1;</code>
        */
       WRITE(1),
+      /**
+       * <code>METHOD_CALL = 2;</code>
+       */
+      METHOD_CALL(2),
       UNRECOGNIZED(-1),
       ;
 
@@ -376,6 +412,10 @@ public final class MethodProtos {
        * <code>WRITE = 1;</code>
        */
       public static final int WRITE_VALUE = 1;
+      /**
+       * <code>METHOD_CALL = 2;</code>
+       */
+      public static final int METHOD_CALL_VALUE = 2;
 
 
       public final int getNumber() {
@@ -398,6 +438,7 @@ public final class MethodProtos {
         switch (value) {
           case 0: return READ;
           case 1: return WRITE;
+          case 2: return METHOD_CALL;
           default: return null;
         }
       }
@@ -1065,24 +1106,29 @@ public final class MethodProtos {
       agent.MethodProtos.MethodCall.Instruction.VariableOrBuilder getVariableOrBuilder();
 
       /**
-       * <code>string value_after = 3;</code>
+       * <code>string value = 3;</code>
        */
-      java.lang.String getValueAfter();
+      java.lang.String getValue();
       /**
-       * <code>string value_after = 3;</code>
+       * <code>string value = 3;</code>
        */
       com.google.protobuf.ByteString
-          getValueAfterBytes();
+          getValueBytes();
 
       /**
-       * <code>string value_before = 4;</code>
+       * <code>int32 linenum = 4;</code>
        */
-      java.lang.String getValueBefore();
+      int getLinenum();
+
       /**
-       * <code>string value_before = 4;</code>
+       * <code>string call_signature = 5;</code>
+       */
+      java.lang.String getCallSignature();
+      /**
+       * <code>string call_signature = 5;</code>
        */
       com.google.protobuf.ByteString
-          getValueBeforeBytes();
+          getCallSignatureBytes();
     }
     /**
      * Protobuf type {@code agent.MethodCall.Instruction}
@@ -1098,8 +1144,9 @@ public final class MethodProtos {
       }
       private Instruction() {
         type_ = 0;
-        valueAfter_ = "";
-        valueBefore_ = "";
+        value_ = "";
+        linenum_ = 0;
+        callSignature_ = "";
       }
 
       @java.lang.Override
@@ -1155,13 +1202,18 @@ public final class MethodProtos {
               case 26: {
                 java.lang.String s = input.readStringRequireUtf8();
 
-                valueAfter_ = s;
+                value_ = s;
                 break;
               }
-              case 34: {
+              case 32: {
+
+                linenum_ = input.readInt32();
+                break;
+              }
+              case 42: {
                 java.lang.String s = input.readStringRequireUtf8();
 
-                valueBefore_ = s;
+                callSignature_ = s;
                 break;
               }
             }
@@ -1950,68 +2002,77 @@ public final class MethodProtos {
         return getVariable();
       }
 
-      public static final int VALUE_AFTER_FIELD_NUMBER = 3;
-      private volatile java.lang.Object valueAfter_;
+      public static final int VALUE_FIELD_NUMBER = 3;
+      private volatile java.lang.Object value_;
       /**
-       * <code>string value_after = 3;</code>
+       * <code>string value = 3;</code>
        */
-      public java.lang.String getValueAfter() {
-        java.lang.Object ref = valueAfter_;
+      public java.lang.String getValue() {
+        java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          valueAfter_ = s;
+          value_ = s;
           return s;
         }
       }
       /**
-       * <code>string value_after = 3;</code>
+       * <code>string value = 3;</code>
        */
       public com.google.protobuf.ByteString
-          getValueAfterBytes() {
-        java.lang.Object ref = valueAfter_;
+          getValueBytes() {
+        java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          valueAfter_ = b;
+          value_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
 
-      public static final int VALUE_BEFORE_FIELD_NUMBER = 4;
-      private volatile java.lang.Object valueBefore_;
+      public static final int LINENUM_FIELD_NUMBER = 4;
+      private int linenum_;
       /**
-       * <code>string value_before = 4;</code>
+       * <code>int32 linenum = 4;</code>
        */
-      public java.lang.String getValueBefore() {
-        java.lang.Object ref = valueBefore_;
+      public int getLinenum() {
+        return linenum_;
+      }
+
+      public static final int CALL_SIGNATURE_FIELD_NUMBER = 5;
+      private volatile java.lang.Object callSignature_;
+      /**
+       * <code>string call_signature = 5;</code>
+       */
+      public java.lang.String getCallSignature() {
+        java.lang.Object ref = callSignature_;
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = 
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          valueBefore_ = s;
+          callSignature_ = s;
           return s;
         }
       }
       /**
-       * <code>string value_before = 4;</code>
+       * <code>string call_signature = 5;</code>
        */
       public com.google.protobuf.ByteString
-          getValueBeforeBytes() {
-        java.lang.Object ref = valueBefore_;
+          getCallSignatureBytes() {
+        java.lang.Object ref = callSignature_;
         if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          valueBefore_ = b;
+          callSignature_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -2036,11 +2097,14 @@ public final class MethodProtos {
         if (variable_ != null) {
           output.writeMessage(2, getVariable());
         }
-        if (!getValueAfterBytes().isEmpty()) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, valueAfter_);
+        if (!getValueBytes().isEmpty()) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, value_);
         }
-        if (!getValueBeforeBytes().isEmpty()) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, valueBefore_);
+        if (linenum_ != 0) {
+          output.writeInt32(4, linenum_);
+        }
+        if (!getCallSignatureBytes().isEmpty()) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 5, callSignature_);
         }
         unknownFields.writeTo(output);
       }
@@ -2058,11 +2122,15 @@ public final class MethodProtos {
           size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(2, getVariable());
         }
-        if (!getValueAfterBytes().isEmpty()) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, valueAfter_);
+        if (!getValueBytes().isEmpty()) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, value_);
         }
-        if (!getValueBeforeBytes().isEmpty()) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, valueBefore_);
+        if (linenum_ != 0) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(4, linenum_);
+        }
+        if (!getCallSignatureBytes().isEmpty()) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, callSignature_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -2086,10 +2154,12 @@ public final class MethodProtos {
           result = result && getVariable()
               .equals(other.getVariable());
         }
-        result = result && getValueAfter()
-            .equals(other.getValueAfter());
-        result = result && getValueBefore()
-            .equals(other.getValueBefore());
+        result = result && getValue()
+            .equals(other.getValue());
+        result = result && (getLinenum()
+            == other.getLinenum());
+        result = result && getCallSignature()
+            .equals(other.getCallSignature());
         result = result && unknownFields.equals(other.unknownFields);
         return result;
       }
@@ -2107,10 +2177,12 @@ public final class MethodProtos {
           hash = (37 * hash) + VARIABLE_FIELD_NUMBER;
           hash = (53 * hash) + getVariable().hashCode();
         }
-        hash = (37 * hash) + VALUE_AFTER_FIELD_NUMBER;
-        hash = (53 * hash) + getValueAfter().hashCode();
-        hash = (37 * hash) + VALUE_BEFORE_FIELD_NUMBER;
-        hash = (53 * hash) + getValueBefore().hashCode();
+        hash = (37 * hash) + VALUE_FIELD_NUMBER;
+        hash = (53 * hash) + getValue().hashCode();
+        hash = (37 * hash) + LINENUM_FIELD_NUMBER;
+        hash = (53 * hash) + getLinenum();
+        hash = (37 * hash) + CALL_SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getCallSignature().hashCode();
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
@@ -2248,9 +2320,11 @@ public final class MethodProtos {
             variable_ = null;
             variableBuilder_ = null;
           }
-          valueAfter_ = "";
+          value_ = "";
 
-          valueBefore_ = "";
+          linenum_ = 0;
+
+          callSignature_ = "";
 
           return this;
         }
@@ -2280,8 +2354,9 @@ public final class MethodProtos {
           } else {
             result.variable_ = variableBuilder_.build();
           }
-          result.valueAfter_ = valueAfter_;
-          result.valueBefore_ = valueBefore_;
+          result.value_ = value_;
+          result.linenum_ = linenum_;
+          result.callSignature_ = callSignature_;
           onBuilt();
           return result;
         }
@@ -2329,12 +2404,15 @@ public final class MethodProtos {
           if (other.hasVariable()) {
             mergeVariable(other.getVariable());
           }
-          if (!other.getValueAfter().isEmpty()) {
-            valueAfter_ = other.valueAfter_;
+          if (!other.getValue().isEmpty()) {
+            value_ = other.value_;
             onChanged();
           }
-          if (!other.getValueBefore().isEmpty()) {
-            valueBefore_ = other.valueBefore_;
+          if (other.getLinenum() != 0) {
+            setLinenum(other.getLinenum());
+          }
+          if (!other.getCallSignature().isEmpty()) {
+            callSignature_ = other.callSignature_;
             onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
@@ -2525,140 +2603,166 @@ public final class MethodProtos {
           return variableBuilder_;
         }
 
-        private java.lang.Object valueAfter_ = "";
+        private java.lang.Object value_ = "";
         /**
-         * <code>string value_after = 3;</code>
+         * <code>string value = 3;</code>
          */
-        public java.lang.String getValueAfter() {
-          java.lang.Object ref = valueAfter_;
+        public java.lang.String getValue() {
+          java.lang.Object ref = value_;
           if (!(ref instanceof java.lang.String)) {
             com.google.protobuf.ByteString bs =
                 (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
-            valueAfter_ = s;
+            value_ = s;
             return s;
           } else {
             return (java.lang.String) ref;
           }
         }
         /**
-         * <code>string value_after = 3;</code>
+         * <code>string value = 3;</code>
          */
         public com.google.protobuf.ByteString
-            getValueAfterBytes() {
-          java.lang.Object ref = valueAfter_;
+            getValueBytes() {
+          java.lang.Object ref = value_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
                     (java.lang.String) ref);
-            valueAfter_ = b;
+            value_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
         /**
-         * <code>string value_after = 3;</code>
+         * <code>string value = 3;</code>
          */
-        public Builder setValueAfter(
+        public Builder setValue(
             java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
   
-          valueAfter_ = value;
+          value_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>string value_after = 3;</code>
+         * <code>string value = 3;</code>
          */
-        public Builder clearValueAfter() {
+        public Builder clearValue() {
           
-          valueAfter_ = getDefaultInstance().getValueAfter();
+          value_ = getDefaultInstance().getValue();
           onChanged();
           return this;
         }
         /**
-         * <code>string value_after = 3;</code>
+         * <code>string value = 3;</code>
          */
-        public Builder setValueAfterBytes(
+        public Builder setValueBytes(
             com.google.protobuf.ByteString value) {
           if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
           
-          valueAfter_ = value;
+          value_ = value;
           onChanged();
           return this;
         }
 
-        private java.lang.Object valueBefore_ = "";
+        private int linenum_ ;
         /**
-         * <code>string value_before = 4;</code>
+         * <code>int32 linenum = 4;</code>
          */
-        public java.lang.String getValueBefore() {
-          java.lang.Object ref = valueBefore_;
+        public int getLinenum() {
+          return linenum_;
+        }
+        /**
+         * <code>int32 linenum = 4;</code>
+         */
+        public Builder setLinenum(int value) {
+          
+          linenum_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>int32 linenum = 4;</code>
+         */
+        public Builder clearLinenum() {
+          
+          linenum_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private java.lang.Object callSignature_ = "";
+        /**
+         * <code>string call_signature = 5;</code>
+         */
+        public java.lang.String getCallSignature() {
+          java.lang.Object ref = callSignature_;
           if (!(ref instanceof java.lang.String)) {
             com.google.protobuf.ByteString bs =
                 (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
-            valueBefore_ = s;
+            callSignature_ = s;
             return s;
           } else {
             return (java.lang.String) ref;
           }
         }
         /**
-         * <code>string value_before = 4;</code>
+         * <code>string call_signature = 5;</code>
          */
         public com.google.protobuf.ByteString
-            getValueBeforeBytes() {
-          java.lang.Object ref = valueBefore_;
+            getCallSignatureBytes() {
+          java.lang.Object ref = callSignature_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b = 
                 com.google.protobuf.ByteString.copyFromUtf8(
                     (java.lang.String) ref);
-            valueBefore_ = b;
+            callSignature_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
         /**
-         * <code>string value_before = 4;</code>
+         * <code>string call_signature = 5;</code>
          */
-        public Builder setValueBefore(
+        public Builder setCallSignature(
             java.lang.String value) {
           if (value == null) {
     throw new NullPointerException();
   }
   
-          valueBefore_ = value;
+          callSignature_ = value;
           onChanged();
           return this;
         }
         /**
-         * <code>string value_before = 4;</code>
+         * <code>string call_signature = 5;</code>
          */
-        public Builder clearValueBefore() {
+        public Builder clearCallSignature() {
           
-          valueBefore_ = getDefaultInstance().getValueBefore();
+          callSignature_ = getDefaultInstance().getCallSignature();
           onChanged();
           return this;
         }
         /**
-         * <code>string value_before = 4;</code>
+         * <code>string call_signature = 5;</code>
          */
-        public Builder setValueBeforeBytes(
+        public Builder setCallSignatureBytes(
             com.google.protobuf.ByteString value) {
           if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
           
-          valueBefore_ = value;
+          callSignature_ = value;
           onChanged();
           return this;
         }
@@ -2880,6 +2984,35 @@ public final class MethodProtos {
       return depth_;
     }
 
+    public static final int PARAM_VALUES_FIELD_NUMBER = 9;
+    private com.google.protobuf.LazyStringList paramValues_;
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getParamValuesList() {
+      return paramValues_;
+    }
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    public int getParamValuesCount() {
+      return paramValues_.size();
+    }
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    public java.lang.String getParamValues(int index) {
+      return paramValues_.get(index);
+    }
+    /**
+     * <code>repeated string param_values = 9;</code>
+     */
+    public com.google.protobuf.ByteString
+        getParamValuesBytes(int index) {
+      return paramValues_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2915,6 +3048,9 @@ public final class MethodProtos {
       }
       if (depth_ != 0) {
         output.writeInt32(8, depth_);
+      }
+      for (int i = 0; i < paramValues_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, paramValues_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -2955,6 +3091,14 @@ public final class MethodProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(8, depth_);
       }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < paramValues_.size(); i++) {
+          dataSize += computeStringSizeNoTag(paramValues_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getParamValuesList().size();
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2989,6 +3133,8 @@ public final class MethodProtos {
           == other.getNewThreadId());
       result = result && (getDepth()
           == other.getDepth());
+      result = result && getParamValuesList()
+          .equals(other.getParamValuesList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -3024,6 +3170,10 @@ public final class MethodProtos {
           getNewThreadId());
       hash = (37 * hash) + DEPTH_FIELD_NUMBER;
       hash = (53 * hash) + getDepth();
+      if (getParamValuesCount() > 0) {
+        hash = (37 * hash) + PARAM_VALUES_FIELD_NUMBER;
+        hash = (53 * hash) + getParamValuesList().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3183,6 +3333,8 @@ public final class MethodProtos {
 
         depth_ = 0;
 
+        paramValues_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -3235,6 +3387,11 @@ public final class MethodProtos {
         result.duration_ = duration_;
         result.newThreadId_ = newThreadId_;
         result.depth_ = depth_;
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          paramValues_ = paramValues_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000100);
+        }
+        result.paramValues_ = paramValues_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3347,6 +3504,16 @@ public final class MethodProtos {
         }
         if (other.getDepth() != 0) {
           setDepth(other.getDepth());
+        }
+        if (!other.paramValues_.isEmpty()) {
+          if (paramValues_.isEmpty()) {
+            paramValues_ = other.paramValues_;
+            bitField0_ = (bitField0_ & ~0x00000100);
+          } else {
+            ensureParamValuesIsMutable();
+            paramValues_.addAll(other.paramValues_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4163,6 +4330,100 @@ public final class MethodProtos {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.LazyStringList paramValues_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureParamValuesIsMutable() {
+        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
+          paramValues_ = new com.google.protobuf.LazyStringArrayList(paramValues_);
+          bitField0_ |= 0x00000100;
+         }
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getParamValuesList() {
+        return paramValues_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public int getParamValuesCount() {
+        return paramValues_.size();
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public java.lang.String getParamValues(int index) {
+        return paramValues_.get(index);
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public com.google.protobuf.ByteString
+          getParamValuesBytes(int index) {
+        return paramValues_.getByteString(index);
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public Builder setParamValues(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureParamValuesIsMutable();
+        paramValues_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public Builder addParamValues(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureParamValuesIsMutable();
+        paramValues_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public Builder addAllParamValues(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureParamValuesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, paramValues_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public Builder clearParamValues() {
+        paramValues_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string param_values = 9;</code>
+       */
+      public Builder addParamValuesBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        ensureParamValuesIsMutable();
+        paramValues_.add(value);
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFieldsProto3(unknownFields);
@@ -4241,24 +4502,25 @@ public final class MethodProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\021method_call.proto\022\005agent\"\362\004\n\nMethodCal" +
+      "\n\021method_call.proto\022\005agent\"\246\005\n\nMethodCal" +
       "l\022\021\n\tsignature\030\001 \001(\t\022.\n\004type\030\002 \001(\0162 .age" +
       "nt.MethodCall.MethodCallType\022,\n\006caller\030\003" +
       " \001(\0132\034.agent.MethodCall.CallerInfo\022 \n\005ca" +
       "lls\030\004 \003(\0132\021.agent.MethodCall\0223\n\014instruct" +
       "ions\030\005 \003(\0132\035.agent.MethodCall.Instructio" +
       "n\022\020\n\010duration\030\006 \001(\003\022\025\n\rnew_thread_id\030\007 \001" +
-      "(\003\022\r\n\005depth\030\010 \001(\005\032/\n\nCallerInfo\022\020\n\010filen" +
-      "ame\030\001 \001(\t\022\017\n\007linenum\030\002 \001(\005\032\332\001\n\013Instructi" +
-      "on\022/\n\004type\030\001 \001(\0162!.agent.MethodCall.Inst" +
-      "ructionType\0228\n\010variable\030\002 \001(\0132&.agent.Me" +
-      "thodCall.Instruction.Variable\022\023\n\013value_a" +
-      "fter\030\003 \001(\t\022\024\n\014value_before\030\004 \001(\t\0325\n\010Vari" +
-      "able\022\r\n\005index\030\001 \001(\005\022\014\n\004name\030\002 \001(\t\022\014\n\004typ" +
-      "e\030\003 \001(\t\".\n\016MethodCallType\022\n\n\006NORMAL\020\000\022\020\n" +
-      "\014THREAD_START\020\001\"&\n\017InstructionType\022\010\n\004RE" +
-      "AD\020\000\022\t\n\005WRITE\020\001B\025\n\005agentB\014MethodProtosb\006" +
-      "proto3"
+      "(\003\022\r\n\005depth\030\010 \001(\005\022\024\n\014param_values\030\t \003(\t\032" +
+      "/\n\nCallerInfo\022\020\n\010filename\030\001 \001(\t\022\017\n\007linen" +
+      "um\030\002 \001(\005\032\347\001\n\013Instruction\022/\n\004type\030\001 \001(\0162!" +
+      ".agent.MethodCall.InstructionType\0228\n\010var" +
+      "iable\030\002 \001(\0132&.agent.MethodCall.Instructi" +
+      "on.Variable\022\r\n\005value\030\003 \001(\t\022\017\n\007linenum\030\004 " +
+      "\001(\005\022\026\n\016call_signature\030\005 \001(\t\0325\n\010Variable\022" +
+      "\r\n\005index\030\001 \001(\005\022\014\n\004name\030\002 \001(\t\022\014\n\004type\030\003 \001" +
+      "(\t\".\n\016MethodCallType\022\n\n\006NORMAL\020\000\022\020\n\014THRE" +
+      "AD_START\020\001\"7\n\017InstructionType\022\010\n\004READ\020\000\022" +
+      "\t\n\005WRITE\020\001\022\017\n\013METHOD_CALL\020\002B\025\n\005agentB\014Me" +
+      "thodProtosb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4277,7 +4539,7 @@ public final class MethodProtos {
     internal_static_agent_MethodCall_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_agent_MethodCall_descriptor,
-        new java.lang.String[] { "Signature", "Type", "Caller", "Calls", "Instructions", "Duration", "NewThreadId", "Depth", });
+        new java.lang.String[] { "Signature", "Type", "Caller", "Calls", "Instructions", "Duration", "NewThreadId", "Depth", "ParamValues", });
     internal_static_agent_MethodCall_CallerInfo_descriptor =
       internal_static_agent_MethodCall_descriptor.getNestedTypes().get(0);
     internal_static_agent_MethodCall_CallerInfo_fieldAccessorTable = new
@@ -4289,7 +4551,7 @@ public final class MethodProtos {
     internal_static_agent_MethodCall_Instruction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_agent_MethodCall_Instruction_descriptor,
-        new java.lang.String[] { "Type", "Variable", "ValueAfter", "ValueBefore", });
+        new java.lang.String[] { "Type", "Variable", "Value", "Linenum", "CallSignature", });
     internal_static_agent_MethodCall_Instruction_Variable_descriptor =
       internal_static_agent_MethodCall_Instruction_descriptor.getNestedTypes().get(0);
     internal_static_agent_MethodCall_Instruction_Variable_fieldAccessorTable = new

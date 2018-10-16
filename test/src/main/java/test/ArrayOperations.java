@@ -2,48 +2,44 @@ package test;
 
 public class ArrayOperations {
 
-	// ArrayOperations() {
-	// 	super("test");
-	// }
-
 	public static void test() {
 		return;
 	}
 	
 	public static void main(String[] args) {
 
-        System.out.println("Main Thread");
-        Thread t = new Thread()
-        {
-        	@Override
-            public void run()
-            {
-                System.out.println("Child Thread");
+		System.out.println("Main Thread");
+		Thread t = new Thread()
+		{
+			@Override
+				public void run()
+				{
+						System.out.println("Child Thread");
 
-		        Thread t = new Thread()
-		        {
-		            public void run()
-		            {
-		                System.out.println("Child-Child Thread");
-		            }
-		        };
-		        t.start();
-            }
-        };
-        t.start();
+				Thread t = new Thread()
+				{
+						public void run()
+						{
+								System.out.println("Child-Child Thread");
+						}
+				};
+				t.start();
+				}
+		};
+		t.start();
 
-        MyThread t2 = new MyThread()
-        {
-        	@Override
-            public void run()
-            {
-                System.out.println("Child MyThread");
-            }
-        };
-        t2.start();
+		MyThread t2 = new MyThread()
+		{
+			@Override
+				public void run()
+				{
+						System.out.println("Child MyThread");
+				}
+		};
+		t2.start();
 
 
-        /************************/
+		/************************/
 
 		// initiate constants and user choice variable
 		final int arraySize = 10;

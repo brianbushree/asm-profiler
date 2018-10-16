@@ -28,6 +28,7 @@ message MethodCall {
 	enum InstructionType {
 		READ = 0;
 		WRITE = 1;
+		METHOD_CALL = 2;
 	}
 
 	message Instruction {
@@ -40,8 +41,11 @@ message MethodCall {
 		}
 
 		Variable variable = 2;
-		string value_after = 3;
-		string value_before = 4;
+		string value = 3;
+
+		int32 linenum = 4;
+
+		string call_signature = 5;
 	}
 
 	repeated Instruction instructions = 5;
@@ -50,5 +54,7 @@ message MethodCall {
 
 	int64 new_thread_id = 7;
 	int32 depth = 8;
+
+	repeated string param_values = 9;
 
 }

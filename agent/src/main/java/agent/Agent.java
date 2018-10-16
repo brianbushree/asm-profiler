@@ -3,16 +3,15 @@ package agent;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.objectweb.asm.Opcodes.ASM6;
@@ -71,25 +70,29 @@ public class Agent {
               && !className.startsWith("agent/")
               && className.startsWith(pack + "/")) {
 
-            // inject code to record method-calls & variable accessing
-            ClassReader cr = new ClassReader(bytes);
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-            ClassAdapter ra = new ClassAdapter(cw, className);
-            cr.accept(ra, ClassReader.EXPAND_FRAMES);
-            modifiedClass = cw.toByteArray();
-
             // use asm.tree to get local variable metadata (name, index, type)
-            //  note: (should be done AFTER we add locals...)
-            ClassReader cr2 = new ClassReader(modifiedClass);
-            ClassWriter cw2 = new ClassWriter(0);
-            ClassNodeAdapter ra2 = new ClassNodeAdapter(cw2, className);
-            cr2.accept(ra2, 0);
-            modifiedClass = cw2.toByteArray();
+            ClassReader preClassReader = new ClassReader(modifiedClass);
+            ClassWriter preClassWriter = new ClassWriter(0);
+            PreClassNodeAdapter preClassNodeAdapter =
+                new PreClassNodeAdapter(preClassWriter, className);
+            preClassReader.accept(preClassNodeAdapter, 0);
+            modifiedClass = preClassWriter.toByteArray();
+
+            // inject code to record method-calls & variable accessing
+            ClassReader classReader = new ClassReader(modifiedClass);
+            ClassWriter classWriter =
+                new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+            ClassAdapter classAdapter = new ClassAdapter(classWriter, className);
+            classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES);
+            modifiedClass = classWriter.toByteArray();
 
             // write out to file for debugging
             //try {
             //  File f = new File("/Users/brianbush/Desktop/classes/" + className.replace('.', '-') + ".class");
-            //  f.createNewFile();
+            //  if (!f.getParentFile().exists())
+            //    f.getParentFile().mkdirs();
+            //  if (!f.exists())
+            //    f.createNewFile();
             //  FileOutputStream out = new FileOutputStream(f);
             //  out.write(modifiedClass);
             //  out.close();
@@ -130,11 +133,11 @@ public class Agent {
 
   static class MethodAdapter extends AdviceAdapter {
 
-	  private static List<Integer> readInsnList = Arrays.asList(ILOAD, LLOAD, FLOAD, DLOAD, ALOAD, RET);
-    private static List<Integer> writeInsnList = Arrays.asList(ISTORE, LSTORE, FSTORE, DSTORE, ASTORE);
-
-	  private MethodVisitor mv;
-    private String sig;
+	  private final MethodVisitor mv;
+    private final String owner;
+    private final String name;
+    private final String desc;
+    private final String sig;
 
     private int loggerId;
     private int startTimeId;
@@ -148,33 +151,59 @@ public class Agent {
         MethodVisitor mv) {
       super(ASM6, mv, access, name, desc);
       this.mv = mv;
+      this.owner = owner;
+      this.name = name;
+      this.desc = desc;
       this.sig = owner + "." + getName() + methodDesc;
+
+      this.loggerId = -1;
+      this.startTimeId = -1;
     }
 
     @Override
-    public void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
-
-      super.visitLocalVariable(name, descriptor, signature, start, end, index);
-      // TODO: record local variable name, type, and index
-
+    public void visitLineNumber(int line, Label label) {
+      if (loggerId != -1) {
+        mv.visitVarInsn(ALOAD, loggerId);
+        mv.visitLdcInsn(line);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logLineNumber", "(I)V", false);
+      }
+      super.visitLineNumber(line, label);
     }
 
     @Override
     public void visitVarInsn(int opcode, int var) {
 
-      if (readInsnList.contains(opcode)) {
+      if (AgentUtils.isRead(opcode)) {
 
-        // TODO: record read value
         super.visitVarInsn(opcode, var);
 
-      } else if (writeInsnList.contains(opcode)) {
+        if (loggerId != -1) {
+          mv.visitVarInsn(ALOAD, loggerId);
+          mv.visitLdcInsn(var);
+          super.visitVarInsn(opcode, var);
+          mv.visitMethodInsn(
+              INVOKESTATIC, "java/lang/String", "valueOf",
+              "(" + AgentUtils.loadToStringValueOf(opcode) + ")" + "Ljava/lang/String;",
+              false
+          );
+          mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logLocalRead", "(ILjava/lang/String;)V", false);
+        }
 
-        // TODO use opcode to get type
-        // AgentUtils.getLoadInst(opcode);
+      } else if (AgentUtils.isWrite(opcode)) {
 
-        // TODO: record before value
         super.visitVarInsn(opcode, var);
-        // TODO: record after value
+
+        if (loggerId != -1) {
+          mv.visitVarInsn(ALOAD, loggerId);
+          mv.visitLdcInsn(var);
+          super.visitVarInsn(AgentUtils.storeToLoad(opcode), var);
+          mv.visitMethodInsn(
+              INVOKESTATIC, "java/lang/String", "valueOf",
+              "(" + AgentUtils.loadToStringValueOf(AgentUtils.storeToLoad(opcode)) + ")" + "Ljava/lang/String;",
+              false
+          );
+          mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logLocalWrite", "(ILjava/lang/String;)V", false);
+        }
 
       } else {
         System.err.println("Error: Instruction opcode not recognized as read/write: " + opcode);
@@ -183,12 +212,13 @@ public class Agent {
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-      if (AgentUtils.isThreadStart(owner, name)) {
+      if (loggerId != -1 && AgentUtils.isThreadStart(owner, name, descriptor)) {
         mv.visitInsn(DUP);
         mv.visitVarInsn(ALOAD, loggerId);
         mv.visitInsn(SWAP);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getId", "()J", false);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logThreadStart", "(J)V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, owner, "getId", "()J", false);
+        mv.visitLdcInsn(owner + "." + name + descriptor);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logThreadStart", "(JLjava/lang/String;)V", false);
       }
 
       super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
@@ -198,6 +228,17 @@ public class Agent {
       this will happen after the call to super.init() */
     @Override
     protected void onMethodEnter() {
+
+      if (AgentUtils.isThreadGetId(owner, name, methodDesc)) {
+        /* Note:
+            Since, getInstance() will call MyThread.getId(),
+            without this we will infinite loop...
+            With this however, if a method is called inside getId(),
+             we'll have a missing parent...
+         */
+        return;
+      }
+
       loggerId = this.newLocal(Type.getObjectType("agent/ProfileLogger"));
       startTimeId = this.newLocal(Type.LONG_TYPE);
 
@@ -205,25 +246,41 @@ public class Agent {
       mv.visitMethodInsn(INVOKESTATIC, "agent/ProfileLogger", "getInstance", "()Lagent/ProfileLogger;", false);
       mv.visitVarInsn(ASTORE, loggerId);
 
-      // TODO logParams on entry
-      List<String> args = AgentUtils.getMethodParamCount(sig);
-      for (String arg : args) {
-        // mv.visitVarInsn(ALOAD, loggerId);
-        //  ...
-        // AgentUtils.getLoadInst(arg);
-      }
-
       // logMethodStart( ... )
       mv.visitVarInsn(ALOAD, loggerId);
       mv.visitLdcInsn(sig);
-      mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logMethodStart", "(Ljava/lang/String;)V", false);
+
+      // new String[]
+      List<LocalVariable> args = ProfileLogger.getMethodParameters(sig);
+      mv.visitLdcInsn(args.size());
+      this.newArray(Type.getType(String.class));
+
+      int index = 0;
+      for (LocalVariable arg : args) {
+
+        // array[i] = String.valueOf(arg)
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitLdcInsn(index);
+        int loadOpcode = AgentUtils.typeToLoad(arg.desc);
+        mv.visitVarInsn(loadOpcode, arg.index);
+        mv.visitMethodInsn(
+            INVOKESTATIC, "java/lang/String", "valueOf",
+            "(" + AgentUtils.loadToStringValueOf(loadOpcode) + ")" + "Ljava/lang/String;",
+            false
+        );
+        mv.visitInsn(Opcodes.AASTORE);
+
+        index++;
+      }
+
+      mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logMethodStart", "(Ljava/lang/String;[Ljava/lang/String;)V", false);
       mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
       mv.visitVarInsn(LSTORE, startTimeId);
     }
 
     @Override
     protected void onMethodExit(int opcode) {
-      if (opcode != Opcodes.ATHROW) {
+      if (loggerId != -1 && opcode != Opcodes.ATHROW) {
         mv.visitVarInsn(ALOAD, loggerId);
         mv.visitLdcInsn(sig);
         mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
@@ -234,11 +291,11 @@ public class Agent {
     }
   }
 
-  public static class ClassNodeAdapter extends ClassNode implements Opcodes {
+  public static class PreClassNodeAdapter extends ClassNode implements Opcodes {
     private ClassVisitor cv;
     private String className;
 
-    public ClassNodeAdapter(ClassVisitor classVisitor, String className) {
+    public PreClassNodeAdapter(ClassVisitor classVisitor, String className) {
       super(ASM6);
       this.cv = classVisitor;
       this.className = className;
@@ -246,16 +303,11 @@ public class Agent {
 
     @Override
     public void visitEnd() {
-      //System.out.println("Class : " + className);
-      //for (MethodNode mn : methods) {
-      //  System.out.println("\tmethod : " + mn.name + " " + mn.desc);
-      //  for (LocalVariableNode local : mn.localVariables) {
-      //    System.out.println("\t\t" + local.index + " : " + local.name + " : " + local.desc);
-      //  }
-      //}
+      for (MethodNode mn : methods) {
+        ProfileLogger.registerLocals(className, mn.name, mn.desc, mn.localVariables);
+      }
       accept(cv);
     }
   }
-
 }
 

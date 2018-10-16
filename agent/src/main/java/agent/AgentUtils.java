@@ -5,14 +5,36 @@ import org.objectweb.asm.Opcodes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.objectweb.asm.Opcodes.*;
+
 public class AgentUtils {
 
-  protected static boolean isThreadStart(String className, String methodName) {
+  private static List<Integer> readInsnList = Arrays.asList(ILOAD, LLOAD, FLOAD, DLOAD, ALOAD, RET);
+  private static List<Integer> writeInsnList = Arrays.asList(ISTORE, LSTORE, FSTORE, DSTORE, ASTORE);
+
+  protected static boolean isRead(int opcode) {
+    return readInsnList.contains(opcode);
+  }
+
+  protected static boolean isWrite(int opcode) {
+    return writeInsnList.contains(opcode);
+  }
+
+  protected static boolean isThreadStart(String className, String methodName, String methodDesc) {
     return methodName.equals("start")
+        && methodDesc.equals("()V")
+        && (className.equals("java/lang/Thread")
+        || listAllSuperClasses(className).contains("java/lang/Thread"));
+  }
+
+  protected static boolean isThreadGetId(String className, String methodName, String methodDesc) {
+    return methodName.equals("getId")
+        && methodDesc.equals("()J")
         && (className.equals("java/lang/Thread")
         || listAllSuperClasses(className).contains("java/lang/Thread"));
   }
@@ -34,32 +56,66 @@ public class AgentUtils {
     return list;
   }
 
-  protected static int getLoadInst(int opcode) {
-
-    // TODO only handle opcode-writes?
-    return 0;
+  protected static int storeToLoad(int opcode) {
+    switch (opcode) {
+      case Opcodes.ASTORE:
+        return Opcodes.ALOAD;
+      case Opcodes.DSTORE:
+        return Opcodes.DLOAD;
+      case Opcodes.FSTORE:
+        return Opcodes.FLOAD;
+      case Opcodes.ISTORE:
+        return Opcodes.ILOAD;
+      case Opcodes.LSTORE:
+        return Opcodes.LLOAD;
+      default:
+        // error
+        System.out.println("ERROR");
+        return 0;
+    }
   }
 
-  protected static int getLoadInst(String type) {
-    // TODO fill this out
-    switch (type) {
-      case "C":
-        return Opcodes.CALOAD; // ?
-      case "Z":
-        return 0;
-      case "S":
-        return 0;
-      case "I":
-        return 0;
-      case "J":
-        return 0;
-      case "F":
-        return 0;
-      case "D":
-        return 0;
+  protected static String loadToStringValueOf(int opcode) {
+    switch (opcode) {
+      case Opcodes.ILOAD:
+        return "I";
+      case Opcodes.DLOAD:
+        return "D";
+      case Opcodes.FLOAD:
+        return "F";
+      case Opcodes.LLOAD:
+        return "J";
       default:
-        return Opcodes.ALOAD;
-      // TODO what about arrays?
+        return "Ljava/lang/Object;";
+    }
+  }
+
+  protected static int typeToLoad(String type) {
+    // https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3.2-200
+    switch (type) {
+      case "B":                               // byte
+        return Opcodes.ILOAD;
+      case "C":                               // char
+        return Opcodes.ILOAD;
+      case "D":                               // double
+        return Opcodes.DLOAD;
+      case "F":                               // float
+        return Opcodes.FLOAD;
+      case "I":                               // int
+        return Opcodes.ILOAD;
+      case "J":                               // long
+        return Opcodes.LLOAD;
+      case "S":                               // short
+        return Opcodes.ILOAD;
+      case "Z":                               // boolean
+        return Opcodes.ILOAD;
+      default:
+        if (type.startsWith("[")) {           // array
+          return Opcodes.ALOAD;
+        } else if (type.startsWith("L")) {    // type ref
+          return Opcodes.ALOAD;
+        }
+        return 0; // error
     }
   }
 
@@ -67,7 +123,7 @@ public class AgentUtils {
   private static Pattern allParamsPattern = Pattern.compile("(\\(.*?\\))");
   private static Pattern paramsPattern = Pattern.compile("(\\[?)(C|Z|S|I|J|F|D|(:?L[^;]+;))");
 
-  protected static List<String> getMethodParamCount(String methodRefType) {
+  protected static List<String> getMethodParamTypes(String methodRefType) {
     Matcher m = allParamsPattern.matcher(methodRefType);
     if (!m.find()) {
       throw new IllegalArgumentException("Method signature does not contain parameters");

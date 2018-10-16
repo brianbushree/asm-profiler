@@ -1,6 +1,7 @@
 package agent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class MethodCallNode {
@@ -12,17 +13,20 @@ class MethodCallNode {
   private MethodProtos.MethodCall.CallerInfo caller;
   private List<MethodCallNode> calls;
   private List<MethodProtos.MethodCall.Instruction> instructions;
+
+  private List<String> paramValues;
   private long duration;
   private long newThreadId;
 
-  public MethodCallNode(int depth, String signature) {
-    this(depth, signature, MethodProtos.MethodCall.MethodCallType.NORMAL);
+  public MethodCallNode(int depth, String signature, String... paramValues) {
+    this(depth, signature, MethodProtos.MethodCall.MethodCallType.NORMAL, paramValues);
   }
 
-  public MethodCallNode(int depth, String signature, MethodProtos.MethodCall.MethodCallType type) {
+  public MethodCallNode(int depth, String signature, MethodProtos.MethodCall.MethodCallType type, String... paramValues) {
     this.depth = depth;
     this.signature = signature;
     this.type = type;
+    this.paramValues = new ArrayList<>(Arrays.asList(paramValues));
     calls = new ArrayList<>();
     instructions = new ArrayList<>();
   }
@@ -33,6 +37,10 @@ class MethodCallNode {
 
   public String getSignature() {
     return signature;
+  }
+
+  public List<String> getParamValues() {
+    return paramValues;
   }
 
   public MethodProtos.MethodCall.MethodCallType getType() {
@@ -57,6 +65,13 @@ class MethodCallNode {
 
   public List<MethodCallNode> getCalls() {
     return calls;
+  }
+
+  public MethodCallNode getLastCall() {
+    if (calls.isEmpty()) {
+      return null;
+    }
+    return calls.get(calls.size() - 1);
   }
 
   public void setCalls(List<MethodCallNode> calls) {
@@ -92,6 +107,7 @@ class MethodCallNode {
         MethodProtos.MethodCall.newBuilder()
         .setSignature(signature)
         .setType(type)
+        .addAllParamValues(paramValues)
         .addAllCalls(callsToProto())
         .addAllInstructions(instructions)
         .setDuration(duration)
