@@ -4,14 +4,21 @@ import org.objectweb.asm.tree.LocalVariableNode;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 public class ProfileLogger {
 
   public static String APP_DIR;
-  private static final String OUTFILE_FORMAT = "/out/thread_%d.txt";
+  private static final String OUTFILE_FORMAT = "/thread_%d.txt";
   private static final String ENS = "UTF8";
 
   private static Map<Long, ProfileLogger> logMap = Collections.synchronizedMap(new HashMap<>());
@@ -303,11 +310,11 @@ public class ProfileLogger {
     last.setDuration(duration);
 
     if (depth == 0) {
-
-      String s = last.toProto().toString();
-      System.out.println(s);
-      out.println(s);
-
+      try {
+        last.toProto().writeTo(out);
+      } catch (IOException e) {
+        System.out.println("ERROR : " + e);
+      }
     }
 	}
 
