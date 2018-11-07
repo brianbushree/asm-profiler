@@ -56,5 +56,6 @@ message MethodCall {
 	int32 depth = 8;
 
 	repeated string param_values = 9;
+	string return_value = 10;
 
 }

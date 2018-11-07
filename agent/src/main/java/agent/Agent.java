@@ -257,8 +257,6 @@ public class Agent {
 
       int index = 0;
       for (LocalVariable arg : args) {
-
-        // array[i] = String.valueOf(arg)
         mv.visitInsn(Opcodes.DUP);
         mv.visitLdcInsn(index);
         int loadOpcode = AgentUtils.typeToLoad(arg.desc);
@@ -281,12 +279,30 @@ public class Agent {
     @Override
     protected void onMethodExit(int opcode) {
       if (loggerId != -1 && opcode != Opcodes.ATHROW) {
+        // get return value
+        if (opcode == Opcodes.RETURN) {
+          mv.visitLdcInsn("");
+        } else {
+          mv.visitInsn(Opcodes.DUP);
+          mv.visitMethodInsn(
+              INVOKESTATIC, "java/lang/String", "valueOf",
+              "(" + AgentUtils.loadToStringValueOf(AgentUtils.returnToLoad(opcode)) + ")" + "Ljava/lang/String;",
+              false
+          );
+        }
+
+        // load logger
         mv.visitVarInsn(ALOAD, loggerId);
+        mv.visitInsn(Opcodes.SWAP);
+
+        // get duration
         mv.visitLdcInsn(sig);
         mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
         mv.visitVarInsn(LLOAD, startTimeId);
         mv.visitInsn(LSUB);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logMethodDuration", "(Ljava/lang/String;J)V", false);
+
+        // make call to logger.logMethodDuration(...)
+        mv.visitMethodInsn(INVOKEVIRTUAL, "agent/ProfileLogger", "logMethodDuration", "(Ljava/lang/String;Ljava/lang/String;J)V", false);
       }
     }
   }

@@ -296,7 +296,7 @@ public class ProfileLogger {
    * @param methodSig  full method signature
    * @param duration   method duration
 	 */
-	public void logMethodDuration(String methodSig, long duration) {
+	public void logMethodDuration(String returnValue, String methodSig, long duration) {
 
     localsTableStack.pop();
 
@@ -308,6 +308,7 @@ public class ProfileLogger {
     assert last != null;
     assert last.getSignature().equals(methodSig);
     last.setDuration(duration);
+    last.setReturnValue(returnValue);
 
     if (depth == 0) {
       try {

@@ -17,6 +17,7 @@ class MethodCallNode {
   private List<String> paramValues;
   private long duration;
   private long newThreadId;
+  private String returnValue;
 
   public MethodCallNode(int depth, String signature, String... paramValues) {
     this(depth, signature, MethodProtos.MethodCall.MethodCallType.NORMAL, paramValues);
@@ -102,6 +103,14 @@ class MethodCallNode {
     this.newThreadId = newThreadId;
   }
 
+  public String getReturnValue() {
+    return returnValue;
+  }
+
+  public void setReturnValue(String returnValue) {
+    this.returnValue = returnValue;
+  }
+
   public MethodProtos.MethodCall toProto() {
     MethodProtos.MethodCall.Builder builder =
         MethodProtos.MethodCall.newBuilder()
@@ -119,6 +128,10 @@ class MethodCallNode {
 
     if (type == MethodProtos.MethodCall.MethodCallType.THREAD_START) {
       builder.setNewThreadId(newThreadId);
+    }
+
+    if (returnValue != null) {
+      builder.setReturnValue(returnValue);
     }
 
     return builder.build();

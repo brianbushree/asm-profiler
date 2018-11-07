@@ -3,6 +3,10 @@ package test;
 public class ArrayOperations {
 
 	public static void test() {
+		testLong(9000L);
+	}
+
+	public static void testLong(long t) {
 		return;
 	}
 	

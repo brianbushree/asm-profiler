@@ -75,6 +75,25 @@ public class AgentUtils {
     }
   }
 
+  protected static int returnToLoad(int opcode) {
+    switch (opcode) {
+      case Opcodes.ARETURN:
+        return Opcodes.ALOAD;
+      case Opcodes.DRETURN:
+        return Opcodes.DLOAD;
+      case Opcodes.FRETURN:
+        return Opcodes.FLOAD;
+      case Opcodes.IRETURN:
+        return Opcodes.ILOAD;
+      case Opcodes.LRETURN:
+        return Opcodes.LLOAD;
+      default:
+        // error
+        System.out.println("ERROR");
+        return 0;
+    }
+  }
+
   protected static String loadToStringValueOf(int opcode) {
     switch (opcode) {
       case Opcodes.ILOAD:
