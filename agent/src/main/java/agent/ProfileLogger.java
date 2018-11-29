@@ -109,12 +109,16 @@ public class ProfileLogger {
     return methodArgs;
   }
 
+  private static class LastLine {
+    int lastLine;
+  }
+
   private Stack<Map<Integer, LocalVariable>> localsTableStack;
 	private PrintStream out;
   private long threadId;
   private MethodCallNode lastNode;
   private MethodCallNode initCache;
-  private int lastLine;
+  private Stack<LastLine> lastLineStack;
 
 	/**
 	 * Using a synchronized Map, fetches/creates
@@ -154,7 +158,7 @@ public class ProfileLogger {
 
 	  this.threadId = tid;
 	  this.initCache = null;
-	  this.lastLine = -1;
+	  this.lastLineStack = new Stack<>();
 	  this.localsTableStack = new Stack<>();
 
 		String fileName = APP_DIR + String.format(OUTFILE_FORMAT, tid);
@@ -185,7 +189,7 @@ public class ProfileLogger {
    * @param line  line number
    */
 	public void logLineNumber(int line) {
-	  lastLine = line;
+    lastLineStack.peek().lastLine = line;
   }
 
 	/**
@@ -212,6 +216,7 @@ public class ProfileLogger {
    * @param params     list representing input values
 	 */
 	public void logMethodStart(String methodSig, String... params) {
+    lastLineStack.push(new LastLine());
     MethodCallNode methodCall = new MethodCallNode(getDepth(), methodSig, params);
     logMethodCallStart(methodCall);
 
@@ -298,6 +303,7 @@ public class ProfileLogger {
 	 */
 	public void logMethodDuration(String returnValue, String methodSig, long duration) {
 
+    lastLineStack.pop();
     localsTableStack.pop();
 
     int depth = getDepth();
@@ -339,7 +345,7 @@ public class ProfileLogger {
                       .build()
               )
               .setValue(value)
-              .setLinenum(lastLine)
+              .setLinenum(lastLineStack.peek().lastLine)
               .build();
       logInstruction(insn);
 
@@ -366,7 +372,7 @@ public class ProfileLogger {
                       .build()
               )
               .setValue(value)
-              .setLinenum(lastLine)
+              .setLinenum(lastLineStack.peek().lastLine)
               .build();
       logInstruction(insn);
 
